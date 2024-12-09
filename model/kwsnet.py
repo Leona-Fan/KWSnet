@@ -123,7 +123,6 @@ class kwsnet(pl.LightningModule):
         self.log("test_loss", loss, on_step=True, on_epoch=True, prog_bar=True, sync_dist=True)
         return loss
 
-    
     def predict_step(self,text_batch, batch_idx):
         self.eval() #forbid grad
         input_,y = text_batch
