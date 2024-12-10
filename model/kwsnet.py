@@ -131,6 +131,10 @@ class kwsnet(pl.LightningModule):
         new_input = (videos,grapheme_tensor,num_words)
         y_pred = self(new_input)
         y_pred_sig = self.sigmoid(y_pred)
+        directory = os.path.dirname(f'analyze/record_{config.name}.txt')
+
+        if not os.path.exists(directory):
+            os.makedirs(directory)
         with open(f'analyze/record_{config.name}.txt', 'a') as f:
             for word,video,pred,true in zip(word_list,video_path,y_pred_sig,y):
                 pred_value = pred.item()
