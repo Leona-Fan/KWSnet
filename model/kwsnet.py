@@ -123,15 +123,20 @@ class kwsnet(pl.LightningModule):
         self.log("test_loss", loss, on_step=True, on_epoch=True, prog_bar=True, sync_dist=True)
         return loss
 
+    
     def predict_step(self,text_batch, batch_idx):
         self.eval() #forbid grad
-        input_,y = text_batch
+        input_ = text_batch
         videos, grapheme_tensor, num_words,video_path,word_list = input_
         new_input = (videos,grapheme_tensor,num_words)
         y_pred = self(new_input)
-        loss = self.loss(y_pred,y)
         y_pred_sig = self.sigmoid(y_pred)
-        return video_path,word_list,y_pred_sig,y
+        with open(f'analyze/record_{config.name}.txt', 'a') as f:
+            for word,video,pred,true in zip(word_list,video_path,y_pred_sig,y):
+                pred_value = pred.item()
+                true_value = true.item()
+                f.write(f"{word}\t{video}\t{pred_value:.16f}\t\n")
+        return video_path,word_list,y_pred_sig
 
 
     def configure_optimizers(self):

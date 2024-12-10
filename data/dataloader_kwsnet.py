@@ -23,11 +23,16 @@ with open(word_dict, 'r') as file:
     char_dict = [line.split(':')[0].strip() for line in file.readlines()]
 
 class S101dataset(Dataset):
-    def __init__(self, path=config.path,set="train", list_path='data/101/{}_short_char.csv', augment=False):
+    def __init__(self, path=config.path, set="train", list_path='data/101/{}_short_char.csv', augment=False):
         super().__init__()
         list_path = list_path.format(set)
-        with open(list_path) as f:
-            self.list = [line.strip().split(';') for line in f.readlines()]
+        if set == "test":
+            list_path = config.test_label_path
+            with open(list_path) as f:
+                self.list = [line.strip().split(',') for line in f.readlines()]
+        else:
+            with open(list_path) as f:
+                self.list = [line.strip().split(';') for line in f.readlines()]
         self.set = set
         self.augment = augment
         self.path = path
@@ -35,6 +40,8 @@ class S101dataset(Dataset):
             self.list = [(video, int(start), int(end), list(re.sub(r'[^\w\s]','',words)), i) for i, (video, start, end, words, frame) in enumerate(self.list) if int(end)-int(start)>0 and len(list(re.sub(r'[^\w\s]','',words)))>4]
         elif set == "val":
             self.list = [(video, int(start), int(end), list(re.sub(r'[^\w\s]','',words)), i) for i, (video, start, end, words, frame) in enumerate(self.list) if int(end)-int(start)>0 and len(list(re.sub(r'[^\w\s]','',words)))>4]
+        elif set == "test":
+            self.list = [(video, int(start), int(end), words, i) for i, (video, start, end, words) in enumerate(self.list)]
         
 
     def __getitem__(self,index): 
@@ -66,7 +73,8 @@ class S101dataset(Dataset):
             imgs = RandomMotionBlur(kernel_size=(3, 7), angle=(0., 360.), direction=(-1., 1.), border_type='reflect', p=0.2)(imgs)
             imgs = RandomHorizontalFlip(p=0.5)(imgs)
             video = imgs
-
+        if self.set == "test":
+            return torch.FloatTensor(np.ascontiguousarray(video)), words,video_path, i
         return torch.FloatTensor(np.ascontiguousarray(video)), words
         
     def __len__(self):
@@ -91,31 +99,38 @@ def make_negative_words(word_lists, negative_multiplier = 1):
                 words.append(word)
     num_words = [len(words) for words in word_lists]
     word_list = sum(word_lists,[])
+    
     return word_list, labels, num_words
 
 def collate_fn(batch,test = config.test):
-    videos, word_lists= zip(*batch)
-    words = []
-    for word_list in word_lists:
-        temp = []
-        options = [4, 5]  
-        weights = [9, 1] 
-        for i in range(len(word_list) - 4): 
-            chosen_length = random.choices(options, weights)[0]
-            if i + chosen_length <= len(word_list):  
-                word = ''.join(word_list[i:i + chosen_length])
-                temp.append(word)
-        words.append(temp)
-    word_list, labels, num_words = make_negative_words(words)
-    num_words = tensor(num_words, dtype=torch.long)
-    labels = tensor(labels, dtype=torch.float16).unsqueeze(-1)
+    if test:
+        videos, word_lists,video_path,i= zip(*batch)
+        num_words = [1] * len(word_lists)
+        word_list = word_lists
+    else:
+        videos, word_lists= zip(*batch)
+        words = []
+        for word_list in word_lists:
+            temp = []
+            options = [4, 5]  
+            weights = [9, 1] 
+            for i in range(len(word_list) - 4): 
+                chosen_length = random.choices(options, weights)[0]
+                if i + chosen_length <= len(word_list):  
+                    word = ''.join(word_list[i:i + chosen_length])
+                    temp.append(word)
+            words.append(temp)
+        word_list, labels, num_words = make_negative_words(words)
+    num_words = tensor(num_words, dtype=torch.long) 
     word_grapheme=[[char_dict.index(char) if char in char_dict else char_dict.index("<unk>") for char in word] for word in word_list]
     pad_index = char_dict.index('<pad>')
     max_length = max(len(word) for word in word_grapheme)
     padded_grapheme = [word + [pad_index] * (max_length - len(word)) for word in word_grapheme]
     grapheme_tensor = torch.tensor(padded_grapheme, dtype=torch.long)
-
     videos = pad_sequence([video.transpose(0, 1) for video in videos], batch_first=True, padding_value=0).transpose(1, 2) #batch_size,1,25,88,88
+    if test:
+        return videos,grapheme_tensor,num_words,video_path,word_list
+    labels = tensor(labels, dtype=torch.float16).unsqueeze(-1)
     y = labels
     return (videos,grapheme_tensor,num_words), y
 
