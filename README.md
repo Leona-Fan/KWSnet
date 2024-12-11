@@ -2,63 +2,77 @@
 
 ## Introduction
 
-The repository is the baseline code for the MAVSR2025 Track2 competition, designed to accomplish a basic visual keyword spotting(KWS). The model architecture is as follows:
+This repository contains the baseline code for the MAVSR2025 Track2 competition, aimed at achieving basic visual keyword spotting (KWS). The model architecture is illustrated below:
 
 ![architecture](./pic/image.png)
 
 ## Preparation
 
-#### Install dependencies:
+### Install Dependencies
+
+Run the following command to install the required dependencies:
 
 ```Shell
 pip install -r requirements.txt
 ```
 
-#### Download dataset:
-To access the CAS-VSR-S101 dataset, please scan the signed agreement (https://github.com/VIPL-Audio-Visual-Speech-Understanding/AVSU-VIPL/blob/master/CAS-VSR-S101-Release%20Agreement.pdf) and send it to lipreading@vipl.ict.ac.cn. Please note that the dataset is only available to universities and research institutes for research purposes only. Note that the agreement should be signed by a full-time staff member (usually your tutor). Sharing the dataset with others is not allowed under the terms of the agreement.
+### Download Dataset
 
-#### Preprocess dataset
+To access the CAS-VSR-S101 dataset, please complete and scan the signed agreement available [here](https://github.com/VIPL-Audio-Visual-Speech-Understanding/AVSU-VIPL/blob/master/CAS-VSR-S101-Release%20Agreement.pdf). Email the signed agreement to `lipreading@vipl.ict.ac.cn`.
 
-Enter `data` for data processing and preparation:
+**Important Notes:**
+- The dataset is available exclusively for universities and research institutions for research purposes.
+- The agreement must be signed by a full-time staff member (usually your tutor).
+- Sharing the dataset with others is not allowed under the terms of the agreement.
 
-Download CAS-VSR-S101 and place it in `data/CAS-VSR-S101_zip/lip_imgs_96` for processing:
+### Preprocess Dataset
+
+Navigate to the `data` directory to process and prepare the dataset.
+
+Place the downloaded CAS-VSR-S101 dataset in `data/CAS-VSR-S101_zip/lip_imgs_112` and run the following script:
 
 ```Shell
 python zip2pkl_101.py
 ```
 
-## Training
-Run the program `main.py` to train the model:
+**Note:** After processing, all video files will be trimmed to start at the `start_frame` and end at the `end_frame`. The baseline workflow is based on `.pkl` files.
 
-```
+## Training
+
+Run `main.py` to train the model:
+
+```Shell
 python main.py
 ```
 
-To monitor training progress:
+To monitor the training progress, use TensorBoard:
 
-```
+```Shell
 tensorboard --logdir /path_to_your_logdir/
 ```
-Configurations are in 'config.py". Please pay attention that you may need to modify it to make the program work as expected.
 
-## Test
-We select 2000 videos and 300 words in validation set for test.
+Model configurations can be found in `config.py`. Make sure to modify this file as needed to ensure the program functions as expected.
+
+## Testing
+
+We select 2000 videos and 300 words from the validation set for testing. Run the following command to evaluate the model:
+
 ```Shell
 python test.py
 ```
 
-
 ## Results
 
-The table below lists the results of the baseline model trained on CAS-VSR-S101, showing the performance on validation and test sets:
+The table below shows the baseline model's performance on the CAS-VSR-S101 dataset for the validation set:
 
-| mAP on val | mAP on test |
-| :--------: | :---------: |
-|   \  |   19%    |
+| mAP on Validation Set |
+| :--------------------: |
+|         18%          |
 
 ## Contact
 
 For questions or further information, please contact:
 
-- Email: lipreading@vipl.ict.ac.cn
-- Organization: Institute of Computing Technology, Chinese Academy of Sciences 
+- **Email:** lipreading@vipl.ict.ac.cn
+- **Organization:** Institute of Computing Technology, Chinese Academy of Sciences
+

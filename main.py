@@ -30,9 +30,6 @@ def main(args):
                       callbacks=[model_checkpoint_callback],
                       precision="16-mixed",
                       max_epochs=config.max_epoch)
-    checkpoint =torch.load(config.pre_train_path)
-    state_dict = checkpoint['state_dict']
-    model.load_state_dict(state_dict,strict = False)
 
     #dataset
     S101dataset = S101DataModule()

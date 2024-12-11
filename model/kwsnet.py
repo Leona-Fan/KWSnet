@@ -1,4 +1,5 @@
 import pytorch_lightning as pl
+import os
 import torch.nn as nn
 import torch.nn.init as init
 import torch.nn.functional as F
@@ -136,10 +137,11 @@ class kwsnet(pl.LightningModule):
         if not os.path.exists(directory):
             os.makedirs(directory)
         with open(f'analyze/record_{config.name}.txt', 'a') as f:
-            for word,video,pred,true in zip(word_list,video_path,y_pred_sig,y):
+            for word,video,pred in zip(word_list,video_path,y_pred_sig):
                 pred_value = pred.item()
-                true_value = true.item()
-                f.write(f"{word}\t{video}\t{pred_value:.16f}\t\n")
+                file_name = os.path.basename(video)  
+                file_name = os.path.splitext(file_name)[0] 
+                f.write(f"{word}\t{file_name}\t{pred_value:.16f}\t\n")
         return video_path,word_list,y_pred_sig
 
 

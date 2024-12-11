@@ -1,8 +1,9 @@
 name = "baseline"
-path = 'lip_imgs_112' # video path
-label_path = 'longform_transcripts.csv' # label path
+path = 'data/101/val' 
+test_label_path = "data/101/val_no_label.csv"
+test_path = "" #checkpoint path
 test = True
-batch_size = 32
+batch_size = 16
 gpus = 4
 lr = 3e-4
 num_workers = 2

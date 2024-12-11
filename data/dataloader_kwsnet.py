@@ -19,11 +19,11 @@ from kornia.augmentation import RandomGaussianNoise, RandomMotionBlur, ColorJitt
 
 word_dict = 'data/101/char_frequencies.txt'
 char_dict = []
-with open(word_dict, 'r') as file:
-    char_dict = [line.split(':')[0].strip() for line in file.readlines()]
+with open(word_dict, 'r', encoding='utf-8') as file:
+    char_dict = [line.strip() for line in file if line.strip()]
 
 class S101dataset(Dataset):
-    def __init__(self, path=config.path, set="train", list_path='data/101/{}_short_char.csv', augment=False):
+    def __init__(self, path=config.path, set="train", list_path='data/101/longform_transcripts.csv', augment=False):
         super().__init__()
         list_path = list_path.format(set)
         if set == "test":
@@ -32,16 +32,16 @@ class S101dataset(Dataset):
                 self.list = [line.strip().split(',') for line in f.readlines()]
         else:
             with open(list_path) as f:
-                self.list = [line.strip().split(';') for line in f.readlines()]
+                self.list = [line.strip().split('\t') for line in f.readlines()]
         self.set = set
         self.augment = augment
         self.path = path
         if set == "train":
-            self.list = [(video, int(start), int(end), list(re.sub(r'[^\w\s]','',words)), i) for i, (video, start, end, words, frame) in enumerate(self.list) if int(end)-int(start)>0 and len(list(re.sub(r'[^\w\s]','',words)))>4]
+            self.list = [(video, 0, int(end), list(re.sub(r'[^\w\s]','',words)), i) for i, (video, start_second, end_second, duration, start, end, frames, words) in enumerate(self.list) if frames>0 and len(list(re.sub(r'[^\w\s]','',words)))>4]
         elif set == "val":
-            self.list = [(video, int(start), int(end), list(re.sub(r'[^\w\s]','',words)), i) for i, (video, start, end, words, frame) in enumerate(self.list) if int(end)-int(start)>0 and len(list(re.sub(r'[^\w\s]','',words)))>4]
+            self.list = [(video, 0, int(end), list(re.sub(r'[^\w\s]','',words)), i) for i, (video, start_second, end_second, duration, start, end, frames, words) in enumerate(self.list) if frames>0 and len(list(re.sub(r'[^\w\s]','',words)))>4]
         elif set == "test":
-            self.list = [(video, int(start), int(end), words, i) for i, (video, start, end, words) in enumerate(self.list)]
+            self.list = [(video, 0, int(end), words, i) for i, (video, start, end, words) in enumerate(self.list)]
         
 
     def __getitem__(self,index): 
